@@ -111,7 +111,70 @@ db.student.aggregate([
             updated_date: 1,
             status: 1,
             amount: '$fees.amount',
-            amountDepostit: '$fees.created_date'
+            amountDeposit: '$fees.created_date'
+        }
+    }
+]);
+
+/**
+ * 
+ * fees aggregate
+ * if you remove the group clause the result would be same
+ */
+db.fees.aggregate([
+    {
+        $lookup: {
+            from: 'student',
+            localField: 'student_id',
+            foreignField: '_id',
+            as: 'student'
+        }
+    },
+    {
+        $unwind: "$student"
+    },
+    {
+        $project: {
+            _id: 1,
+            student_id: 1,
+            amount: 1,
+            created_date: 1,
+            updated_date: 1,
+            status: 1,
+            rollno: '$student.rollNo',
+            student_name: {
+                $concat: [
+                    '$student.firstName',
+                    ' ',
+                    '$student.lastName'
+                ]
+            }
+        }
+    },
+    {
+        $group: {
+            _id: "$_id",
+            rollno: {
+                "$first": "$rollno"                
+            },
+            student_id: {
+                "$first": "$student_id"                
+            },
+            student_name: {
+                "$first": "$student_name"
+            },
+            amount: {
+                "$first": "$amount",
+            },
+            created_date: {
+                "$first": "$created_date",
+            },
+            updated_date: {
+                "$first": "$updated_date",
+            },
+            status: {
+                "$first": "$status",
+            }
         }
     }
 ]);
@@ -120,6 +183,8 @@ db.student.aggregate([
  * 
  * get sum group by
  * the names you alias in $project must be same in $group
+ * if you remove the group by clause the rows would be seperated and amount is atomic without addition
+ * feesPaidCnt total number of times the fees paid
  */
 db.student.aggregate([
     {
@@ -139,18 +204,27 @@ db.student.aggregate([
             rollNo: 1,
             firstName: 1,
             lastName: 1,
-            created_date: 1,
-            updated_date: 1,
             status: 1,
-            amount: '$fees.amount',
-            amountDepostit: '$fees.created_date'
+            amount: '$fees.amount'
         }
     },
     {
         $group: {
             _id: "$_id",
+            rollNo: {
+                "$first": "$rollNo"
+            },
+            firstName: {
+                "$first": "$firstName"
+            },
+            lastName: {
+                "$first": "$lastName"
+            },
             total: {
                 $sum: "$amount"
+            },
+            feesPaidCnt: {
+                $sum: 1
             }
         }
     }
