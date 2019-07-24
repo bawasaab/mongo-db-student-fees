@@ -185,6 +185,8 @@ db.fees.aggregate([
  * the names you alias in $project must be same in $group
  * if you remove the group by clause the rows would be seperated and amount is atomic without addition
  * feesPaidCnt total number of times the fees paid
+ * one can use $size clause to count the total rows only if the table is not unwind
+ * if the table is unwind use $sum:1 to count the rows
  */
 db.student.aggregate([
     {
